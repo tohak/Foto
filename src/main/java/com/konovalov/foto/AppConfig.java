@@ -1,6 +1,7 @@
 package com.konovalov.foto;
 
 
+import com.konovalov.foto.user.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,21 +22,23 @@ import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.Properties;
 
-@Configuration
-@PropertySource("classpath:config.properties")
-@EnableTransactionManagement
-@EnableWebMvc
+@Configuration //обозначение конфиг файла
+@PropertySource("classpath:config.properties") // путь к конфигу hibernate
+@EnableTransactionManagement // включение транзакции в автомате
+@EnableWebMvc // включение MVC
 public class AppConfig extends WebMvcConfigurerAdapter {
+    // вычитывание конфига hibernate
     @Value("${hibernate.dialect}")
     private String sqlDialect;
-
     @Value("${hbm2ddl.auto}")
     private String hbm2dllAuto;
 
+    // создание менеджера  транзакций
     @Bean
     public PlatformTransactionManager transactionManager(EntityManagerFactory emf){
         return new JpaTransactionManager(emf);
     }
+    // создание адаптера
     @Bean
     public JpaVendorAdapter jpaVendorAdapter() {
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
@@ -43,6 +46,7 @@ public class AppConfig extends WebMvcConfigurerAdapter {
         return adapter;
     }
 
+    //создание и настройки hibernate
     @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory
             (DataSource dataSource, JpaVendorAdapter jpaVendeorAdapter) {
@@ -52,14 +56,14 @@ public class AppConfig extends WebMvcConfigurerAdapter {
         LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
         entityManagerFactory.setDataSource(dataSource);
         entityManagerFactory.setJpaVendorAdapter(jpaVendeorAdapter);
-        entityManagerFactory.setPackagesToScan("com.konovalov.foto");
+        entityManagerFactory.setPackagesToScan("com.konovalov.foto"); // путь где искать
         entityManagerFactory.setJpaProperties(jpaProp);
 
         return entityManagerFactory;
     }
 
 
-
+    // настройки веб интерфе1йса
     @Bean
     public UrlBasedViewResolver setupViewResolver() {
         UrlBasedViewResolver resolver = new UrlBasedViewResolver();
@@ -69,12 +73,16 @@ public class AppConfig extends WebMvcConfigurerAdapter {
         resolver.setOrder(1);
         return resolver;
     }
-
+    // настройки папки для хранения  ресурсов
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
                 .addResourceHandler("/static/**")
                 .addResourceLocations("/WEB-INF/static/");
+    }
+    @Bean
+    public UserDetailsService userDetailsService(){
+        return new UserDetailsServiceImpl();
     }
 }
 
